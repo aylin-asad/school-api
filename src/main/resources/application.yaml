@@ -1,0 +1,19 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /test-demo
+spring:
+  application:
+    name: test-demo-api
+  datasource:
+    url: jdbc:postgresql://localhost:5433/school_db
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
