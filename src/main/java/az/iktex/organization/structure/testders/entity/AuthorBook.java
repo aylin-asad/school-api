@@ -7,6 +7,13 @@ import lombok.*;
 @Table(name = "author_book", uniqueConstraints =
     @UniqueConstraint(name = "uk_author_book", columnNames = {"author_id", "book_id"}))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+
+@Cacheable
+@org.hibernate.annotations.Cache(
+        usage = org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE,
+        region = "author-books"
+)
+
 public class AuthorBook {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     // No cascade: deleting an association must never remove its author or book.

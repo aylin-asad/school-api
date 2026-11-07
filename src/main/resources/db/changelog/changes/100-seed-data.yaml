@@ -1,0 +1,592 @@
+databaseChangeLog:
+  - changeSet:
+        id: 100-1
+        author: aylin-asad
+        contextFilter: dev
+        changes:
+        -   insert:
+                tableName: departments
+                columns:
+                -   column:
+                        name: name
+                        value: Science
+                -   column:
+                        name: location
+                        value: Baku
+                -   column:
+                        name: phone
+                        value: '0121000001'
+        -   insert:
+                tableName: departments
+                columns:
+                -   column:
+                        name: name
+                        value: Engineering
+                -   column:
+                        name: location
+                        value: Baku
+                -   column:
+                        name: phone
+                        value: '0121000002'
+        -   insert:
+                tableName: departments
+                columns:
+                -   column:
+                        name: name
+                        value: Languages
+                -   column:
+                        name: location
+                        value: Baku
+                -   column:
+                        name: phone
+                        value: '0121000003'
+        rollback:
+        -   delete:
+                tableName: departments
+                where: name IN ('Science','Engineering','Languages')
+  - changeSet:
+        id: 100-2
+        author: aylin-asad
+        contextFilter: dev
+        changes:
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo1
+                -   column:
+                        name: surname
+                        value: SeedEmployee1
+                -   column:
+                        name: salary
+                        valueNumeric: 9800
+                -   column:
+                        name: department_id
+                        valueNumeric: 1
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo2
+                -   column:
+                        name: surname
+                        value: SeedEmployee2
+                -   column:
+                        name: salary
+                        valueNumeric: 3500
+                -   column:
+                        name: department_id
+                        valueNumeric: 1
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo3
+                -   column:
+                        name: surname
+                        value: SeedEmployee3
+                -   column:
+                        name: salary
+                        valueNumeric: 4200
+                -   column:
+                        name: department_id
+                        valueNumeric: 1
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo4
+                -   column:
+                        name: surname
+                        value: SeedEmployee4
+                -   column:
+                        name: salary
+                        valueNumeric: 2900
+                -   column:
+                        name: department_id
+                        valueNumeric: 1
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo5
+                -   column:
+                        name: surname
+                        value: SeedEmployee5
+                -   column:
+                        name: salary
+                        valueNumeric: 5000
+                -   column:
+                        name: department_id
+                        valueNumeric: 2
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo6
+                -   column:
+                        name: surname
+                        value: SeedEmployee6
+                -   column:
+                        name: salary
+                        valueNumeric: 6000
+                -   column:
+                        name: department_id
+                        valueNumeric: 2
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo7
+                -   column:
+                        name: surname
+                        value: SeedEmployee7
+                -   column:
+                        name: salary
+                        valueNumeric: 3100
+                -   column:
+                        name: department_id
+                        valueNumeric: 2
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo8
+                -   column:
+                        name: surname
+                        value: SeedEmployee8
+                -   column:
+                        name: salary
+                        valueNumeric: 4000
+                -   column:
+                        name: department_id
+                        valueNumeric: 3
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo9
+                -   column:
+                        name: surname
+                        value: SeedEmployee9
+                -   column:
+                        name: salary
+                        valueNumeric: 4400
+                -   column:
+                        name: department_id
+                        valueNumeric: 3
+        -   insert:
+                tableName: employees
+                columns:
+                -   column:
+                        name: name
+                        value: Demo10
+                -   column:
+                        name: surname
+                        value: SeedEmployee10
+                -   column:
+                        name: salary
+                        valueNumeric: 4700
+                -   column:
+                        name: department_id
+                        valueNumeric: 3
+        rollback:
+        -   delete:
+                tableName: employees
+                where: surname LIKE 'SeedEmployee%'
+  - changeSet:
+        id: 100-3
+        author: aylin-asad
+        contextFilter: dev
+        changes:
+        -   insert:
+                tableName: courses
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Course 1
+                -   column:
+                        name: credit
+                        valueNumeric: 5
+                -   column:
+                        name: teacher
+                        value: Teacher One
+                -   column:
+                        name: capacity
+                        valueNumeric: 1
+        -   insert:
+                tableName: courses
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Course 2
+                -   column:
+                        name: credit
+                        valueNumeric: 5
+                -   column:
+                        name: teacher
+                        value: Teacher Two
+                -   column:
+                        name: capacity
+                        valueNumeric: 30
+        -   insert:
+                tableName: courses
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Course 3
+                -   column:
+                        name: credit
+                        valueNumeric: 4
+                -   column:
+                        name: teacher
+                        value: Teacher Three
+                -   column:
+                        name: capacity
+                        valueNumeric: 30
+        -   insert:
+                tableName: courses
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Course 4
+                -   column:
+                        name: credit
+                        valueNumeric: 6
+                -   column:
+                        name: teacher
+                        value: Teacher Four
+                -   column:
+                        name: capacity
+                        valueNumeric: 30
+        -   insert:
+                tableName: courses
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Course 5
+                -   column:
+                        name: credit
+                        valueNumeric: 3
+                -   column:
+                        name: teacher
+                        value: Teacher Five
+                -   column:
+                        name: capacity
+                        valueNumeric: 30
+        rollback:
+        -   delete:
+                tableName: courses
+                where: title LIKE 'Demo Course %'
+  - changeSet:
+        id: 100-4
+        author: aylin-asad
+        contextFilter: dev
+        changes:
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student1
+                -   column:
+                        name: surname
+                        value: SeedStudent1
+                -   column:
+                        name: age
+                        valueNumeric: 20
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student2
+                -   column:
+                        name: surname
+                        value: SeedStudent2
+                -   column:
+                        name: age
+                        valueNumeric: 21
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student3
+                -   column:
+                        name: surname
+                        value: SeedStudent3
+                -   column:
+                        name: age
+                        valueNumeric: 22
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student4
+                -   column:
+                        name: surname
+                        value: SeedStudent4
+                -   column:
+                        name: age
+                        valueNumeric: 19
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student5
+                -   column:
+                        name: surname
+                        value: SeedStudent5
+                -   column:
+                        name: age
+                        valueNumeric: 20
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student6
+                -   column:
+                        name: surname
+                        value: SeedStudent6
+                -   column:
+                        name: age
+                        valueNumeric: 21
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student7
+                -   column:
+                        name: surname
+                        value: SeedStudent7
+                -   column:
+                        name: age
+                        valueNumeric: 22
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student8
+                -   column:
+                        name: surname
+                        value: SeedStudent8
+                -   column:
+                        name: age
+                        valueNumeric: 19
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student9
+                -   column:
+                        name: surname
+                        value: SeedStudent9
+                -   column:
+                        name: age
+                        valueNumeric: 20
+        -   insert:
+                tableName: students
+                columns:
+                -   column:
+                        name: name
+                        value: Student10
+                -   column:
+                        name: surname
+                        value: SeedStudent10
+                -   column:
+                        name: age
+                        valueNumeric: 21
+        rollback:
+        -   delete:
+                tableName: students
+                where: surname LIKE 'SeedStudent%'
+  - changeSet:
+        id: 100-5
+        author: aylin-asad
+        contextFilter: dev
+        changes:
+        -   insert:
+                tableName: authors
+                columns:
+                -   column:
+                        name: name
+                        value: Author1
+                -   column:
+                        name: surname
+                        value: SeedAuthor1
+                -   column:
+                        name: country
+                        value: Azerbaijan
+        -   insert:
+                tableName: authors
+                columns:
+                -   column:
+                        name: name
+                        value: Author2
+                -   column:
+                        name: surname
+                        value: SeedAuthor2
+                -   column:
+                        name: country
+                        value: Azerbaijan
+        -   insert:
+                tableName: authors
+                columns:
+                -   column:
+                        name: name
+                        value: Author3
+                -   column:
+                        name: surname
+                        value: SeedAuthor3
+                -   column:
+                        name: country
+                        value: Azerbaijan
+        -   insert:
+                tableName: authors
+                columns:
+                -   column:
+                        name: name
+                        value: Author4
+                -   column:
+                        name: surname
+                        value: SeedAuthor4
+                -   column:
+                        name: country
+                        value: Turkey
+        -   insert:
+                tableName: authors
+                columns:
+                -   column:
+                        name: name
+                        value: Author5
+                -   column:
+                        name: surname
+                        value: SeedAuthor5
+                -   column:
+                        name: country
+                        value: Germany
+        rollback:
+        -   delete:
+                tableName: authors
+                where: surname LIKE 'SeedAuthor%'
+  - changeSet:
+        id: 100-6
+        author: aylin-asad
+        contextFilter: dev
+        changes:
+        -   insert:
+                tableName: books
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Book 1
+                -   column:
+                        name: price
+                        valueNumeric: 13
+                -   column:
+                        name: page_count
+                        valueNumeric: 170
+        -   insert:
+                tableName: books
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Book 2
+                -   column:
+                        name: price
+                        valueNumeric: 14
+                -   column:
+                        name: page_count
+                        valueNumeric: 190
+        -   insert:
+                tableName: books
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Book 3
+                -   column:
+                        name: price
+                        valueNumeric: 15
+                -   column:
+                        name: page_count
+                        valueNumeric: 210
+        -   insert:
+                tableName: books
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Book 4
+                -   column:
+                        name: price
+                        valueNumeric: 16
+                -   column:
+                        name: page_count
+                        valueNumeric: 230
+        -   insert:
+                tableName: books
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Book 5
+                -   column:
+                        name: price
+                        valueNumeric: 17
+                -   column:
+                        name: page_count
+                        valueNumeric: 250
+        -   insert:
+                tableName: books
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Book 6
+                -   column:
+                        name: price
+                        valueNumeric: 18
+                -   column:
+                        name: page_count
+                        valueNumeric: 270
+        -   insert:
+                tableName: books
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Book 7
+                -   column:
+                        name: price
+                        valueNumeric: 19
+                -   column:
+                        name: page_count
+                        valueNumeric: 290
+        -   insert:
+                tableName: books
+                columns:
+                -   column:
+                        name: title
+                        value: Demo Book 8
+                -   column:
+                        name: price
+                        valueNumeric: 20
+                -   column:
+                        name: page_count
+                        valueNumeric: 310
+        rollback:
+        -   delete:
+                tableName: books
+                where: title LIKE 'Demo Book %'

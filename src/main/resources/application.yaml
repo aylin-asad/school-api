@@ -1,19 +1,45 @@
+
 server:
   port: 8080
   servlet:
     context-path: /test-demo
+
 spring:
   application:
     name: test-demo-api
+
   datasource:
     url: jdbc:postgresql://localhost:5433/school_db
     username: postgres
     password: postgres
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     open-in-view: false
     properties:
       hibernate:
         format_sql: true
+        generate_statistics: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          auto_evict_collection_cache: true
+          region:
+            factory_class: jcache
+        javax:
+          cache:
+            provider: org.ehcache.jsr107.EhcacheCachingProvider
+            uri: /ehcache.xml
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    contexts: dev
+
+logging:
+  level:
+    org.hibernate.cache: debug
+    org.springframework.orm.jpa.JpaTransactionManager: debug
+    org.springframework.transaction: trace

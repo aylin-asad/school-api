@@ -1,0 +1,144 @@
+databaseChangeLog:
+  - changeSet:
+        id: 004-1
+        author: aylin-asad
+        preConditions:
+        -   onFail: MARK_RAN
+        -   not:
+            -   tableExists:
+                    tableName: authors
+        changes:
+        -   createTable:
+                tableName: authors
+                columns:
+                -   column:
+                        name: id
+                        type: BIGINT
+                        autoIncrement: true
+                        constraints:
+                            nullable: false
+                            primaryKey: true
+                            primaryKeyName: pk_authors
+                -   column:
+                        name: name
+                        type: VARCHAR(50)
+                        constraints:
+                            nullable: false
+                -   column:
+                        name: surname
+                        type: VARCHAR(50)
+                        constraints:
+                            nullable: false
+                -   column:
+                        name: country
+                        type: VARCHAR(50)
+  - changeSet:
+        id: 004-2
+        author: aylin-asad
+        preConditions:
+        -   onFail: MARK_RAN
+        -   not:
+            -   tableExists:
+                    tableName: books
+        changes:
+        -   createTable:
+                tableName: books
+                columns:
+                -   column:
+                        name: id
+                        type: BIGINT
+                        autoIncrement: true
+                        constraints:
+                            nullable: false
+                            primaryKey: true
+                            primaryKeyName: pk_books
+                -   column:
+                        name: title
+                        type: VARCHAR(150)
+                        constraints:
+                            nullable: false
+                -   column:
+                        name: price
+                        type: DECIMAL(8,2)
+                        constraints:
+                            nullable: false
+                -   column:
+                        name: page_count
+                        type: INTEGER
+                        constraints:
+                            nullable: false
+  - changeSet:
+        id: 004-3
+        author: aylin-asad
+        changes:
+        -   addUniqueConstraint:
+                tableName: books
+                columnNames: title
+                constraintName: uk_book_title
+  - changeSet:
+        id: 004-4
+        author: aylin-asad
+        changes:
+        -   sql:
+                sql: ALTER TABLE books ADD CONSTRAINT chk_book_price CHECK (price >= 0)
+        rollback:
+        -   sql:
+                sql: ALTER TABLE books DROP CONSTRAINT IF EXISTS chk_book_price
+  - changeSet:
+        id: 004-5
+        author: aylin-asad
+        preConditions:
+        -   onFail: MARK_RAN
+        -   not:
+            -   tableExists:
+                    tableName: author_book
+        changes:
+        -   createTable:
+                tableName: author_book
+                columns:
+                -   column:
+                        name: id
+                        type: BIGINT
+                        autoIncrement: true
+                        constraints:
+                            nullable: false
+                            primaryKey: true
+                            primaryKeyName: pk_author_book
+                -   column:
+                        name: author_id
+                        type: BIGINT
+                        constraints:
+                            nullable: false
+                -   column:
+                        name: book_id
+                        type: BIGINT
+                        constraints:
+                            nullable: false
+  - changeSet:
+        id: 004-6
+        author: aylin-asad
+        changes:
+        -   addUniqueConstraint:
+                tableName: author_book
+                columnNames: author_id, book_id
+                constraintName: uk_author_book
+  - changeSet:
+        id: 004-7
+        author: aylin-asad
+        changes:
+        -   addForeignKeyConstraint:
+                baseTableName: author_book
+                baseColumnNames: author_id
+                referencedTableName: authors
+                referencedColumnNames: id
+                constraintName: fk_ab_author
+  - changeSet:
+        id: 004-8
+        author: aylin-asad
+        changes:
+        -   addForeignKeyConstraint:
+                baseTableName: author_book
+                baseColumnNames: book_id
+                referencedTableName: books
+                referencedColumnNames: id
+                constraintName: fk_ab_book

@@ -1,0 +1,58 @@
+databaseChangeLog:
+- changeSet:
+    id: 007-1
+    author: aylin-asad
+    preConditions:
+    - onFail: MARK_RAN
+    - not:
+      - tableExists:
+          tableName: audit_logs
+    changes:
+    - createTable:
+        tableName: audit_logs
+        columns:
+        - column:
+            name: id
+            type: BIGINT
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: pk_audit_logs
+        - column:
+            name: action
+            type: VARCHAR(50)
+            constraints:
+              nullable: false
+        - column:
+            name: entity_name
+            type: VARCHAR(50)
+            constraints:
+              nullable: false
+        - column:
+            name: entity_id
+            type: BIGINT
+        - column:
+            name: status
+            type: VARCHAR(20)
+            constraints:
+              nullable: false
+        - column:
+            name: message
+            type: VARCHAR(500)
+        - column:
+            name: created_at
+            type: TIMESTAMP
+            constraints:
+              nullable: false
+            defaultValueComputed: CURRENT_TIMESTAMP
+- changeSet:
+    id: 007-2
+    author: aylin-asad
+    changes:
+    - sql:
+        sql: ALTER TABLE audit_logs ADD CONSTRAINT chk_audit_status CHECK (status
+          IN ('SUCCESS', 'FAILED'))
+    rollback:
+    - sql:
+        sql: ALTER TABLE audit_logs DROP CONSTRAINT IF EXISTS chk_audit_status

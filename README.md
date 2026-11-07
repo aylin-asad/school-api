@@ -183,3 +183,215 @@ Repo yaratdıqdan sonra `<username>` hissəsini öz GitHub istifadəçi adınız
 ## 9. Yoxlanmanın vəziyyəti
 
 **Qeyd:** Bu arxiv Java/Gradle/DB ilə end-to-end build olunmayıb (hazırkı çalışma mühitində Java 21 var, Gradle və Docker yoxdur). Ona görə `./gradlew clean build` və Postman smoke test-i öz kompüterinizdə mütləq işə salın. Kod statik yoxlamadan keçirilib.
+# School API — Practical Assignment 2
+
+Spring Boot REST API built on the existing `school-api` project. This assignment demonstrates **Liquibase database migrations**, **Hibernate second-level and query caching**, **Spring transaction propagation**, and **PostgreSQL transaction isolation**.
+
+## Technology and environment
+
+- Java 25; Spring Boot 4.0.9; Gradle; Spring Data JPA / Hibernate; PostgreSQL 16
+- Liquibase for versioned database schema changes
+- Hibernate JCache with Ehcache 3 for caching
+- Local PostgreSQL: `localhost:5433`, database `school_db`
+- Local application: `http://localhost:8080/test-demo`
+- Development profile uses the Liquibase `dev` context for seed data
+
+> The commands below reflect the local development setup used for the demonstrations. The transaction and isolation endpoints are educational diagnostics, not production APIs.
+
+## Start the project
+
+1. Start the existing PostgreSQL Docker container or Docker Compose services:
+
+   ```bash
+   docker start school-postgres
+   ```
+
+   Alternatively, if using the project's Docker Compose configuration:
+
+   ```bash
+   docker compose up -d
+   ```
+
+2. Confirm that `src/main/resources/application.yaml` points to the local PostgreSQL instance and that Liquibase is enabled. Hibernate must validate the database schema rather than create it:
+
+   ```yaml
+   spring:
+     jpa:
+       hibernate:
+         ddl-auto: validate
+     liquibase:
+       enabled: true
+       change-log: classpath:db/changelog/db.changelog-master.yaml
+       contexts: dev
+   ```
+
+3. Build and run from the repository root:
+
+   ```bash
+   ./gradlew clean build
+   ./gradlew bootRun
+   ```
+
+The REST API is served under `/test-demo/api`.
+
+## Part A — Liquibase (30 points)
+
+Liquibase changesets live under `src/main/resources/db/changelog/`; the master file is `db.changelog-master.yaml`. They create and manage the application's tables, including users/passports, departments/employees, students/courses, authors/books/author-books, and `audit_logs`.
+
+**Demonstrated behaviors:**
+
+- Database objects are created by Liquibase; Hibernate uses `ddl-auto: validate`.
+- Executed changesets are recorded in PostgreSQL's `databasechangelog` table; the development seed data is controlled by context `dev`.
+- Tag `v1.0` provides a rollback target. Later migrations add `courses.capacity` and `audit_logs`.
+- Editing a previously executed changeset produces a checksum validation error; restoring the original changeset resolves the error.
+- Deliberately mismatching an entity mapping causes Hibernate schema validation to fail, demonstrating that it does not silently alter the database.
+- Rollback to `v1.0` removes later objects, and `update` restores them.
+
+Useful checks:
+
+```bash
+./gradlew status
+./gradlew update
+```
+
+The Gradle Liquibase rollback activity is configured to use the tag `v1.0`:
+
+```bash
+./gradlew rollback -PliquibaseTag=v1.0
+```
+
+**Important:** Do not run rollback on a shared or production database. Stop the application before running rollback/update. Do not modify executed changesets. The demo seed scripts are development-only; because identity sequences can advance after a rollback, verify seeded foreign-key IDs before assuming that a repeated data restore is safe.
+
+**Why Liquibase instead of `ddl-auto: update`?** Liquibase provides ordered, reviewable changes, checksums, history, contexts, tags, and rollback support. By contrast, implicit Hibernate updates are difficult to audit and coordinate across a team. The `databasechangeloglock` table prevents concurrent migration processes from changing the schema simultaneously.
+
+## Part B — Hibernate L2, collection and query caching (25 points)
+
+Caching is enabled through Hibernate's JCache integration with Ehcache, configured by `src/main/resources/ehcache.xml` and `application.yaml`.
+
+| Cached data | Region | Strategy |
+|---|---|---|
+| `Department` | `departments` | `READ_WRITE` |
+| `Course` | `courses` | `READ_WRITE` |
+| `Author` | `authors` | `READ_WRITE` |
+| `Book` | `books` | `NONSTRICT_READ_WRITE` |
+| `AuthorBook` | `author-books` | `READ_WRITE` |
+| `Author.authorBooks` | `author-authorBooks` | `READ_WRITE` |
+| `Book.authorBooks` | `book-authorBooks` | `READ_WRITE` |
+| Cached author-country query results | `default-query-results-region` | Query cache |
+
+The cache configuration includes `hibernate.cache.auto_evict_collection_cache=true` so changes to bidirectional links do not leave previously cached inverse collections stale. Caching behavior is observable through `CacheController`.
+
+**Diagnostic endpoints:**
+
+```text
+GET    /test-demo/api/cache/stats
+DELETE /test-demo/api/cache
+DELETE /test-demo/api/cache/stats
+DELETE /test-demo/api/cache/{region}
+```
+
+**Demonstrated behaviors:**
+
+1. Two separate requests to `GET /test-demo/api/courses/6` produce one cache miss/put and then one L2 hit.
+2. Repeating `GET /test-demo/api/authors?country=Azerbaijan` produces a query-cache hit; inserting an author invalidates the cached query result.
+3. Evicting `/api/cache/courses` causes the next course lookup to miss and repopulate the region.
+4. Repeating `GET /test-demo/api/books/9` produces hits in both `books` and `book-authorBooks`.
+5. Updating Book 9's price returns fresh data instead of an obsolete cached value.
+6. Repeating `GET /test-demo/api/authors/6/books` demonstrates cached `Author.authorBooks`, including an empty collection.
+7. Linking and unlinking books updates the author-book relationship and invalidates the relevant cached collection.
+
+Example:
+
+```bash
+curl -s http://localhost:8080/test-demo/api/cache/stats | python3 -m json.tool
+```
+
+**Note:** IDs 6 and 9 are examples from the development database used for verification. Identity values may differ after migrations, rollback, or reseeding.
+
+## Part C — Transaction propagation (20 points)
+
+The demonstration uses separate Spring service beans to ensure `@Transactional` proxy interception. `PropagationDemoService` opens the outer transaction, and `PropagationWorkerService` performs audit inserts to the existing `audit_logs` table.
+
+| Propagation | Demonstration | Expected outcome |
+|---|---|---|
+| `REQUIRED` | Audit insert joins an outer transaction that deliberately throws an exception | Insert is rolled back |
+| `REQUIRES_NEW` | Audit insert runs in a separate transaction before the outer exception | Insert remains committed |
+| `MANDATORY` | Invoke worker outside and inside a transaction | Outside fails; inside succeeds |
+
+```bash
+curl -s -X POST http://localhost:8080/test-demo/api/tx-demo/rollback | python3 -m json.tool
+curl -s http://localhost:8080/test-demo/api/tx-demo/audit | python3 -m json.tool
+curl -s -X POST http://localhost:8080/test-demo/api/tx-demo/mandatory/outside | python3 -m json.tool
+curl -s -X POST http://localhost:8080/test-demo/api/tx-demo/mandatory/inside | python3 -m json.tool
+curl -s http://localhost:8080/test-demo/api/tx-demo/audit | python3 -m json.tool
+```
+
+**Observed in the local demonstration:** The `REQUIRES_NEW` row survived the intentional rollback, no `REQUIRED` row remained, the outside `MANDATORY` call reported an expected failure, and the inside `MANDATORY` call committed its audit row.
+
+## Part D — PostgreSQL transaction isolation (20 points)
+
+The isolation demonstration uses `IsolationDemoController`, `IsolationWorkerService`, independent threads, transaction annotations, and coordinated barriers. A separate Liquibase changeset (`008-isolation-demo.yaml`) creates the two demonstration tables: `isolation_accounts` and `isolation_doctors`.
+
+Run the scenarios **sequentially**; each scenario resets its own demonstration rows:
+
+```bash
+curl -s http://localhost:8080/test-demo/api/isolation/d1 | python3 -m json.tool
+curl -s http://localhost:8080/test-demo/api/isolation/d2 | python3 -m json.tool
+curl -s http://localhost:8080/test-demo/api/isolation/d3 | python3 -m json.tool
+```
+
+| Test | Comparison | Expected result |
+|---|---|---|
+| **D1: Non-repeatable read** | `READ_COMMITTED` vs. `REPEATABLE_READ` | The first sees balance `100 -> 150`; the second sees `100 -> 100` |
+| **D2: Lost update** | Unsafe read-modify-write vs. atomic SQL update | Unsafe balance `110`; atomic fix `120` |
+| **D3: Write skew** | `REPEATABLE_READ` vs. `SERIALIZABLE` | Repeatable Read can leave 0 doctors on call; Serializable preserves at least 1 and aborts a conflicting transaction (PostgreSQL SQLSTATE `40001`) |
+
+**Validation:** Confirm that each JSON response contains `"passed": true`. A screenshot alone is evidence of running a test, not proof that it passed. The SERIALIZABLE failure is an *expected controlled result*, not an application startup failure.
+
+## Evidence / screenshots
+
+Screenshots are stored in `screenshots/` and document verification of the implementation. Filenames used during the assignment:
+
+- **Part A:** `A01_Liquibase_Startup.png` through `A07_Restore_After_Rollback.png`.
+- **Part B:** `B01_Course_L2_Cache_Hit.png` through `B09_Author_Book_Unlink_Cache_Invalidation.png`.
+- **Part C:** `C01_Required_Rollback.png`, `C02_RequiresNew_Commit.png`, `C03_Mandatory_Propagation.png`.
+- **Part D:** `D01_Transaction_Isolation_All_Tests.png` (combined output for D1, D2, D3). If a single image does not show all three results legibly, provide separate screenshots.
+
+Only include screenshots that were actually captured and verified. Avoid committing passwords, production data, or large build artifacts.
+
+## Project layout (relevant files)
+
+```text
+src/main/java/az/iktex/organization/structure/testders/
+  controller/
+    CacheController.java
+    PropagationDemoController.java
+    IsolationDemoController.java
+  service/
+    PropagationDemoService.java
+    PropagationWorkerService.java
+    IsolationWorkerService.java
+  entity/
+    AuditLog.java
+src/main/resources/
+  application.yaml
+  ehcache.xml
+  db/changelog/
+    db.changelog-master.yaml
+    changes/
+      001-... through 008-isolation-demo.yaml
+      100-seed-data.yaml
+scripts/
+  enable-part-d.sh
+screenshots/
+  ...
+```
+
+## Final verification
+
+```bash
+./gradlew clean build
+./gradlew status
+```
+
+Confirm that application startup succeeds, the Liquibase changelog is up to date, Part B cache counters show hits and invalidation, Part C audit behavior matches the expectations above, and D1/D2/D3 each return `passed: true`. Then commit the code, migration, README and screenshots to the assignment branch.

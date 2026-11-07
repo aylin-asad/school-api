@@ -8,7 +8,14 @@ import java.util.Set;
 @Entity
 @Table(name = "courses", uniqueConstraints = @UniqueConstraint(name = "uk_course_title", columnNames = "title"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Cacheable
+@org.hibernate.annotations.Cache(
+        usage = org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE,
+        region = "courses"
+)
 public class Course {
+    @Column(nullable = false)
+    private Integer capacity = 30;
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Column(nullable = false, length = 100) private String title;
     @Column(nullable = false) private Integer credit;

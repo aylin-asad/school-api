@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+        id: 005-1
+        author: aylin-asad
+        changes:
+        -   tagDatabase:
+                tag: v1.0

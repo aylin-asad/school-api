@@ -11,6 +11,13 @@ import java.math.BigDecimal;
 @Table(name = "books", uniqueConstraints = @UniqueConstraint(name = "uk_book_title", columnNames = "title"))
 @Check(name = "chk_book_price", constraints = "price >= 0")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+
+@Cacheable
+@org.hibernate.annotations.Cache(
+        usage = org.hibernate.annotations.CacheConcurrencyStrategy.NONSTRICT_READ_WRITE,
+        region = "books"
+)
+
 public class Book {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Column(nullable = false, length = 150) private String title;
@@ -18,5 +25,11 @@ public class Book {
     @Column(name = "page_count", nullable = false) private Integer pageCount;
     @Setter(AccessLevel.NONE)
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+
+    @org.hibernate.annotations.Cache(
+            usage = org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE,
+            region = "book-authorBooks"
+    )
+
     private List<AuthorBook> authorBooks = new ArrayList<>();
 }

@@ -8,6 +8,13 @@ import java.util.List;
 @Entity
 @Table(name = "departments", uniqueConstraints = @UniqueConstraint(name = "uk_department_name", columnNames = "name"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+
+@Cacheable
+@org.hibernate.annotations.Cache(
+        usage = org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE,
+        region = "departments"
+)
+
 public class Department {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Column(nullable = false, length = 50) private String name;

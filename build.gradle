@@ -1,12 +1,18 @@
+// The Gradle Liquibase plugin needs Liquibase while plugins are being applied.
+buildscript {
+    repositories { mavenCentral() }
+    dependencies { classpath 'org.liquibase:liquibase-core:4.31.1' }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.9'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.liquibase.gradle' version '3.1.1'
 }
 
 group = 'az.iktex.organization.structure'
 version = '0.0.1-SNAPSHOT'
-
 java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
 
 repositories { mavenCentral() }
@@ -15,6 +21,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+
+    // Part B dependencies already declared; cache is enabled when Part B is implemented.
+    implementation 'org.hibernate.orm:hibernate-jcache'
+    implementation 'org.ehcache:ehcache:3.10.8:jakarta'
+
     implementation 'org.mapstruct:mapstruct:1.6.3'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -24,6 +36,25 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Standalone Gradle tasks: update / rollback / status.
+    liquibaseRuntime 'org.liquibase:liquibase-core:4.31.1'
+    liquibaseRuntime 'info.picocli:picocli:4.7.6'
+    liquibaseRuntime 'org.postgresql:postgresql:42.7.7'
+}
+
+liquibase {
+    activities {
+        main {
+            changelogFile 'db/changelog/db.changelog-master.yaml'
+            searchPath 'src/main/resources'
+            url 'jdbc:postgresql://localhost:5433/school_db'
+            username 'postgres'
+            password 'postgres'
+            contexts 'dev'
+        }
+    }
+    runList = 'main'
 }
 
 tasks.named('test') { useJUnitPlatform() }

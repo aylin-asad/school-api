@@ -32,10 +32,18 @@ public class AuthorService {
     public List<AuthorResponse> withoutBooks() {
         return mapper.toResponseList(authors.findAllByAuthorBooksIsEmpty());
     }
+
     public List<BookResponse> books(Long id) {
-        find(id);
-        return bookMapper.toResponseList(books.findBooksByAuthorId(id));
+        Author author = find(id);
+
+        List<Book> linkedBooks = author.getAuthorBooks()
+                .stream()
+                .map(AuthorBook::getBook)
+                .toList();
+
+        return bookMapper.toResponseList(linkedBooks);
     }
+
     @Transactional public AuthorResponse update(Long id, AuthorRequest request) {
         Author author = find(id);
         checkDuplicate(request, id);

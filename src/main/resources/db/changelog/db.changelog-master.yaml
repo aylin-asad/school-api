@@ -1,0 +1,29 @@
+databaseChangeLog:
+- include:
+    file: changes/001-create-users-passports.yaml
+    relativeToChangelogFile: true
+- include:
+    file: changes/002-create-departments-employees.yaml
+    relativeToChangelogFile: true
+- include:
+    file: changes/003-create-students-courses.yaml
+    relativeToChangelogFile: true
+- include:
+    file: changes/004-create-authors-books.yaml
+    relativeToChangelogFile: true
+- include:
+    file: changes/005-tag-v1.0.yaml
+    relativeToChangelogFile: true
+- include:
+    file: changes/006-add-course-capacity.yaml
+    relativeToChangelogFile: true
+- include:
+    file: changes/007-create-audit-logs.yaml
+    relativeToChangelogFile: true
+- include:
+    file: changes/100-seed-data.yaml
+    relativeToChangelogFile: true
+
+- include:
+    file: changes/008-isolation-demo.yaml
+    relativeToChangelogFile: true

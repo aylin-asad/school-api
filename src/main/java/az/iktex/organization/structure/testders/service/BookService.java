@@ -27,10 +27,11 @@ public class BookService {
         checkTitle(request.title(), null);
         return mapper.toResponse(books.save(mapper.toEntity(request)));
     }
+
     public BookResponse get(Long id) {
-        return mapper.toDetailResponse(books.findDetailById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Book not found: " + id)));
+        return mapper.toDetailResponse(find(id));
     }
+
     public List<BookResponse> all(String title) {
         return mapper.toResponseList(title == null ? books.findAll() : books.findAllByTitleContainingIgnoreCase(title));
     }

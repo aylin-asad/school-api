@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-isolation-demo-schema
+      author: aylin-asad
+      changes:
+        - createTable:
+            tableName: isolation_accounts
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_isolation_accounts
+              - column:
+                  name: balance
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: isolation_doctors
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_isolation_doctors
+              - column:
+                  name: doctor_name
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: on_call
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 008-isolation-demo-seed
+      author: aylin-asad
+      changes:
+        - insert:
+            tableName: isolation_accounts
+            columns:
+              - column: {name: id, valueNumeric: 1}
+              - column: {name: balance, valueNumeric: 100}
+        - insert:
+            tableName: isolation_doctors
+            columns:
+              - column: {name: id, valueNumeric: 1}
+              - column: {name: doctor_name, value: 'Doctor A'}
+              - column: {name: on_call, valueBoolean: true}
+        - insert:
+            tableName: isolation_doctors
+            columns:
+              - column: {name: id, valueNumeric: 2}
+              - column: {name: doctor_name, value: 'Doctor B'}
+              - column: {name: on_call, valueBoolean: true}
+      rollback:
+        - delete:
+            tableName: isolation_doctors
+        - delete:
+            tableName: isolation_accounts
