@@ -1,5 +1,7 @@
 package az.iktex.organization.structure.testders.controller;
 
+import az.iktex.organization.structure.testders.exception.BusinessException;
+import az.iktex.organization.structure.testders.enums.ErrorCode;
 import az.iktex.organization.structure.testders.service.IsolationWorkerService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -200,7 +202,7 @@ public class IsolationDemoController {
 
     private static void await(CountDownLatch latch) throws Exception {
         if (!latch.await(30, TimeUnit.SECONDS)) {
-            throw new IllegalStateException("Timed out coordinating isolation demo threads");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR);
         }
     }
 

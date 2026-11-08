@@ -5,7 +5,9 @@ import az.iktex.organization.structure.testders.repository.*;
 import az.iktex.organization.structure.testders.mapper.*;
 import az.iktex.organization.structure.testders.request.*;
 import az.iktex.organization.structure.testders.response.*;
-import jakarta.persistence.EntityNotFoundException;
+
+import az.iktex.organization.structure.testders.enums.ErrorCode;
+import az.iktex.organization.structure.testders.exception.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,10 +60,10 @@ public class AuthorService {
         boolean duplicate = id == null
             ? authors.existsByNameIgnoreCaseAndSurnameIgnoreCase(request.name(), request.surname())
             : authors.existsByNameIgnoreCaseAndSurnameIgnoreCaseAndIdNot(request.name(), request.surname(), id);
-        if (duplicate) throw new IllegalStateException("Author already exists");
+        if (duplicate) throw new AlreadyExistsException(ErrorCode.AUTHOR_ALREADY_EXISTS);
     }
     private Author find(Long id) {
-        return authors.findById(id).orElseThrow(() -> new EntityNotFoundException("Author not found: " + id));
+        return authors.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.AUTHOR_NOT_FOUND, id));
     }
 
 }

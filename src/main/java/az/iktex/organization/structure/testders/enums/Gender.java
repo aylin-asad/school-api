@@ -1,5 +1,6 @@
 package az.iktex.organization.structure.testders.enums;
 
+import az.iktex.organization.structure.testders.exception.InvalidRequestException;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -12,6 +13,6 @@ public enum Gender {
         return Arrays.stream(values())
             .filter(g -> Objects.equals(g.dbCode, code))
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Unknown gender code: " + code));
+            .orElseThrow(() -> new InvalidRequestException(ErrorCode.MALFORMED_REQUEST));
     }
 }

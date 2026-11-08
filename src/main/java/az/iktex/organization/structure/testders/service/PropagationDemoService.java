@@ -1,5 +1,7 @@
 package az.iktex.organization.structure.testders.service;
 
+import az.iktex.organization.structure.testders.exception.BusinessException;
+import az.iktex.organization.structure.testders.enums.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +18,7 @@ public class PropagationDemoService {
     public void demonstrateOuterRollback() {
         worker.required();
         worker.requiresNew();
-        throw new IllegalStateException("Intentional outer transaction rollback for demo");
+        throw new BusinessException(ErrorCode.INTERNAL_ERROR);
     }
 
     @Transactional

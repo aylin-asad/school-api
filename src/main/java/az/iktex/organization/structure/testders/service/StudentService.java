@@ -5,7 +5,9 @@ import az.iktex.organization.structure.testders.repository.*;
 import az.iktex.organization.structure.testders.mapper.*;
 import az.iktex.organization.structure.testders.request.*;
 import az.iktex.organization.structure.testders.response.*;
-import jakarta.persistence.EntityNotFoundException;
+
+import az.iktex.organization.structure.testders.enums.ErrorCode;
+import az.iktex.organization.structure.testders.exception.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +27,7 @@ public class StudentService {
     }
     public StudentResponse get(Long id) {
         return mapper.toDetailResponse(students.findDetailById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Student not found: " + id)));
+            .orElseThrow(() -> new NotFoundException(ErrorCode.STUDENT_NOT_FOUND, id)));
     }
     public List<StudentResponse> all() { return mapper.toResponseList(students.findAll()); }
     public List<StudentResponse> withoutCourses() {
@@ -43,22 +45,22 @@ public class StudentService {
     @Transactional public void enroll(Long studentId, Long courseId) {
         Student s = find(studentId);
         Course c = courses.findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException("Course not found: " + courseId));
+            .orElseThrow(() -> new NotFoundException(ErrorCode.COURSE_NOT_FOUND, courseId));
         if (students.existsByIdAndCoursesId(studentId, courseId))
-            throw new IllegalStateException("Student already enrolled in this course");
+            throw new AlreadyExistsException(ErrorCode.STUDENT_ALREADY_ENROLLED);
         s.addCourse(c);
     }
     @Transactional public void unenroll(Long studentId, Long courseId) {
         Student s = find(studentId);
         Course c = courses.findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException("Course not found: " + courseId));
+            .orElseThrow(() -> new NotFoundException(ErrorCode.COURSE_NOT_FOUND, courseId));
         if (!students.existsByIdAndCoursesId(studentId, courseId))
-            throw new IllegalStateException("Student is not enrolled in this course");
+            throw new AlreadyExistsException(ErrorCode.STUDENT_NOT_ENROLLED);
         s.removeCourse(c);
     }
     private Student find(Long id) {
         return students.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Student not found: " + id));
+            .orElseThrow(() -> new NotFoundException(ErrorCode.STUDENT_NOT_FOUND, id));
     }
 
 }

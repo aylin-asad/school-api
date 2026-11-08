@@ -6,7 +6,9 @@ import az.iktex.organization.structure.testders.mapper.*;
 import az.iktex.organization.structure.testders.request.*;
 import az.iktex.organization.structure.testders.response.*;
 import java.math.BigDecimal;
-import jakarta.persistence.EntityNotFoundException;
+
+import az.iktex.organization.structure.testders.enums.ErrorCode;
+import az.iktex.organization.structure.testders.exception.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +38,7 @@ public class BookService {
         return mapper.toResponseList(title == null ? books.findAll() : books.findAllByTitleContainingIgnoreCase(title));
     }
     public List<BookResponse> cheaperThan(BigDecimal price) {
-        if (price == null || price.signum() < 0) throw new IllegalArgumentException("Price must be >= 0");
+        if (price == null || price.signum() < 0) throw new InvalidRequestException(ErrorCode.VALIDATION_ERROR);
         return mapper.toResponseList(books.findAllByPriceLessThanEqualOrderByPriceAsc(price));
     }
     @Transactional public BookResponse update(Long id, BookRequest request) {
@@ -53,9 +55,9 @@ public class BookService {
     @Transactional public void linkAuthor(Long bookId, Long authorId) {
         Book book = find(bookId);
         Author author = authors.findById(authorId)
-            .orElseThrow(() -> new EntityNotFoundException("Author not found: " + authorId));
+            .orElseThrow(() -> new NotFoundException(ErrorCode.AUTHOR_NOT_FOUND, authorId));
         if (authorBooks.existsByAuthorIdAndBookId(authorId, bookId))
-            throw new IllegalStateException("Author already linked to book");
+            throw new AlreadyExistsException(ErrorCode.BOOK_AUTHOR_ALREADY_LINKED);
         AuthorBook link = new AuthorBook();
         link.setAuthor(author);
         link.setBook(book);
@@ -64,18 +66,18 @@ public class BookService {
     @Transactional public void unlinkAuthor(Long bookId, Long authorId) {
         // Bulk JPQL deletion avoids loading either inverse collection; affects only the link row.
         if (authorBooks.deletePair(authorId, bookId) == 0)
-            throw new EntityNotFoundException("Author-book link does not exist");
+            throw new NotFoundException(ErrorCode.BOOK_AUTHOR_NOT_LINKED);
     }
     private void checkTitle(String title, Long id) {
         boolean exists = id == null ? books.existsByTitleIgnoreCase(title)
             : books.existsByTitleIgnoreCaseAndIdNot(title, id);
-        if (exists) throw new IllegalStateException("Book title already exists");
+        if (exists) throw new AlreadyExistsException(ErrorCode.BOOK_ALREADY_EXISTS);
     }
     private void validatePrice(BigDecimal price) {
-        if (price == null || price.signum() < 0) throw new IllegalArgumentException("Price must be >= 0");
+        if (price == null || price.signum() < 0) throw new InvalidRequestException(ErrorCode.VALIDATION_ERROR);
     }
     private Book find(Long id) {
-        return books.findById(id).orElseThrow(() -> new EntityNotFoundException("Book not found: " + id));
+        return books.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.BOOK_NOT_FOUND, id));
     }
 
 }

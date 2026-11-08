@@ -6,7 +6,9 @@ import az.iktex.organization.structure.testders.mapper.*;
 import az.iktex.organization.structure.testders.request.*;
 import az.iktex.organization.structure.testders.response.*;
 import java.math.BigDecimal;
-import jakarta.persistence.EntityNotFoundException;
+
+import az.iktex.organization.structure.testders.enums.ErrorCode;
+import az.iktex.organization.structure.testders.exception.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +38,7 @@ public class EmployeeService {
     }
     public List<EmployeeResponse> salaryRange(BigDecimal min, BigDecimal max) {
         if (min == null || max == null || min.compareTo(max) > 0)
-            throw new IllegalArgumentException("Invalid salary range: min must be <= max");
+            throw new InvalidRequestException(ErrorCode.EMPLOYEE_SALARY_RANGE);
         return mapper.toResponseList(employees.findAllBySalaryBetween(min, max));
     }
     public AverageSalaryResponse averageSalary(Long departmentId) {
@@ -56,20 +58,20 @@ public class EmployeeService {
     @Transactional public void delete(Long id) { employees.delete(find(id)); }
     private Employee find(Long id) {
         return employees.findDetailById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Employee not found: " + id));
+            .orElseThrow(() -> new NotFoundException(ErrorCode.EMPLOYEE_NOT_FOUND, id));
     }
     private Department findDepartment(Long id) {
         return departments.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Department not found: " + id));
+            .orElseThrow(() -> new NotFoundException(ErrorCode.DEPARTMENT_NOT_FOUND, id));
     }
     private void checkDuplicate(Long dep, String name, String surname, Long exclude) {
         boolean exists = exclude == null
             ? employees.existsByDepartmentIdAndNameIgnoreCaseAndSurnameIgnoreCase(dep, name, surname)
             : employees.existsByDepartmentIdAndNameIgnoreCaseAndSurnameIgnoreCaseAndIdNot(dep, name, surname, exclude);
-        if (exists) throw new IllegalStateException("Employee with this name already exists in department");
+        if (exists) throw new AlreadyExistsException(ErrorCode.EMPLOYEE_ALREADY_EXISTS);
     }
     private void checkSalary(BigDecimal salary) {
-        if (salary == null || salary.signum() <= 0) throw new IllegalArgumentException("Salary must be positive");
+        if (salary == null || salary.signum() <= 0) throw new InvalidRequestException(ErrorCode.EMPLOYEE_SALARY_RANGE);
     }
 
 }

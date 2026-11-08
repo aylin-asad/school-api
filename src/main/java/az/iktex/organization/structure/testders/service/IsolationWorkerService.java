@@ -1,5 +1,7 @@
 package az.iktex.organization.structure.testders.service;
 
+import az.iktex.organization.structure.testders.exception.BusinessException;
+import az.iktex.organization.structure.testders.enums.ErrorCode;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -93,18 +95,18 @@ public class IsolationWorkerService {
     private int balance() {
         Integer value = jdbc.queryForObject(
                 "SELECT balance FROM isolation_accounts WHERE id = 1", Integer.class);
-        if (value == null) throw new IllegalStateException("Missing demo balance row");
+        if (value == null) throw new BusinessException(ErrorCode.INTERNAL_ERROR);
         return value;
     }
 
     private static void await(CountDownLatch latch) {
         try {
             if (!latch.await(30, TimeUnit.SECONDS)) {
-                throw new IllegalStateException("Timed out coordinating isolation demo threads");
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Isolation demo interrupted", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR);
         }
     }
 }

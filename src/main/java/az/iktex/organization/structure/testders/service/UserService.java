@@ -6,7 +6,9 @@ import az.iktex.organization.structure.testders.repository.*;
 import az.iktex.organization.structure.testders.mapper.*;
 import az.iktex.organization.structure.testders.request.*;
 import az.iktex.organization.structure.testders.response.*;
-import jakarta.persistence.EntityNotFoundException;
+
+import az.iktex.organization.structure.testders.enums.ErrorCode;
+import az.iktex.organization.structure.testders.exception.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,16 +25,16 @@ public class UserService {
     private final PassportMapper passportMapper;
 
     @Transactional public UserResponse create(UserRequest request) {
-        if (users.existsByEmail(request.email())) throw new IllegalStateException("Email already exists");
+        if (users.existsByEmail(request.email())) throw new AlreadyExistsException(ErrorCode.USER_EMAIL_EXISTS);
         return mapper.toResponse(users.save(mapper.toEntity(request)));
     }
     public UserResponse get(Long id) {
         return mapper.toResponse(users.findDetailById(id)
-            .orElseThrow(() -> new EntityNotFoundException("User not found: " + id)));
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, id)));
     }
     public UserResponse byEmail(String email) {
         return mapper.toResponse(users.findByEmail(email)
-            .orElseThrow(() -> new EntityNotFoundException("Email not found: " + email)));
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, email)));
     }
     public List<UserResponse> all(Gender gender) {
         return mapper.toResponseList(gender == null ? users.findAll() : users.findAllByGender(gender));
@@ -41,16 +43,16 @@ public class UserService {
     @Transactional public UserResponse update(Long id, UserRequest request) {
         User user = find(id);
         if (users.existsByEmailAndIdNot(request.email(), id))
-            throw new IllegalStateException("Email belongs to another user");
+            throw new AlreadyExistsException(ErrorCode.USER_EMAIL_USED);
         mapper.updateEntity(request, user); // managed -> automatic dirty checking; no save()
         return mapper.toResponse(user);
     }
     @Transactional public void delete(Long id) { users.delete(find(id)); }
     @Transactional public PassportResponse addPassport(Long id, PassportRequest request) {
         User user = find(id);
-        if (user.getPassport() != null) throw new IllegalStateException("User already has a passport");
+        if (user.getPassport() != null) throw new AlreadyExistsException(ErrorCode.USER_PASSPORT_EXISTS);
         if (passports.existsBySerialNumber(request.serialNumber()))
-            throw new IllegalStateException("Passport serial number already exists");
+            throw new AlreadyExistsException(ErrorCode.PASSPORT_SERIAL_EXISTS);
         Passport passport = passportMapper.toEntity(request);
         user.setPassport(passport);
         passports.save(passport); // owning side gets generated ID for response
@@ -58,16 +60,16 @@ public class UserService {
     }
     public PassportResponse passport(Long id) {
         User user = find(id);
-        if (user.getPassport() == null) throw new EntityNotFoundException("Passport not found for user " + id);
+        if (user.getPassport() == null) throw new NotFoundException(ErrorCode.PASSPORT_NOT_FOUND, id);
         return passportMapper.toResponse(user.getPassport());
     }
     @Transactional public void deletePassport(Long id) {
         User user = find(id);
-        if (user.getPassport() == null) throw new EntityNotFoundException("Passport not found for user " + id);
+        if (user.getPassport() == null) throw new NotFoundException(ErrorCode.PASSPORT_NOT_FOUND, id);
         user.setPassport(null); // orphanRemoval issues DELETE; user remains.
     }
     private User find(Long id) {
-        return users.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found: " + id));
+        return users.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND, id));
     }
 
 }
