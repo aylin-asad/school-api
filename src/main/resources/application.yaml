@@ -44,6 +44,12 @@ spring:
 
 logging:
   level:
+    az.iktex.organization.structure.testders.logging.LoggingAspect: DEBUG
     org.hibernate.cache: debug
     org.springframework.orm.jpa.JpaTransactionManager: debug
     org.springframework.transaction: trace
+
+  pattern:
+    level: "%5p [%X{traceId:-}]"
+  file:
+    name: logs/app.log

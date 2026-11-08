@@ -7,3 +7,6 @@ build/
 out/
 gradle-9.8.2/
 gradle-9.8.2-bin.zip
+
+# Runtime log output
+logs/
