@@ -20,7 +20,16 @@ public class SecurityConfig {
   return http.csrf(AbstractHttpConfigurer::disable).formLogin(AbstractHttpConfigurer::disable).httpBasic(AbstractHttpConfigurer::disable)
    .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
    .exceptionHandling(e->e.authenticationEntryPoint(entryPoint).accessDeniedHandler(denied))
-   .authorizeHttpRequests(a->a.requestMatchers("/api/auth/register","/api/auth/login","/api/auth/refresh","/swagger-ui.html","/swagger-ui/**","/v3/api-docs/**","/error").permitAll().requestMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated()).addFilterBefore(jwtFilter,org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class).build();
+   .authorizeHttpRequests(a->a.requestMatchers("/api/auth/register","/api/auth/login","/api/auth/refresh","/swagger-ui.html","/swagger-ui/**","/v3/api-docs/**","/error").permitAll().requestMatchers("/api/admin/**").hasRole("ADMIN")
+    .requestMatchers("/api/auth/**").authenticated()
+    .requestMatchers(org.springframework.http.HttpMethod.GET,"/api/users/**").hasAnyRole("ADMIN","MANAGER")
+    .requestMatchers("/api/users/**").hasRole("ADMIN")
+    .requestMatchers(org.springframework.http.HttpMethod.GET,"/api/students/**","/api/courses/**","/api/authors/**","/api/books/**","/api/departments/**","/api/employees/**").authenticated()
+    .requestMatchers(org.springframework.http.HttpMethod.DELETE,"/api/students/**","/api/courses/**","/api/authors/**","/api/books/**").hasRole("ADMIN")
+    .requestMatchers("/api/students/**","/api/courses/**","/api/authors/**","/api/books/**").hasAnyRole("ADMIN","MANAGER")
+    .requestMatchers("/api/departments/**","/api/employees/**").hasRole("ADMIN")
+    .requestMatchers("/api/cache/**","/api/demo/**","/api/propagation/**","/api/isolation/**").hasRole("ADMIN")
+    .anyRequest().authenticated()).addFilterBefore(jwtFilter,org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class).build();
  }
  @Bean public PasswordEncoder passwordEncoder(){return new BCryptPasswordEncoder(12);}
  @Bean public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception{return config.getAuthenticationManager();}

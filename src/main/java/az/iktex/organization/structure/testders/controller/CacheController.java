@@ -91,12 +91,14 @@ public class CacheController {
         );
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/stats")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearStats() {
         statistics().clear();
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearCache() {
@@ -106,6 +108,7 @@ public class CacheController {
                 .evictAllRegions();
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{region}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearRegion(@PathVariable String region) {

@@ -38,6 +38,7 @@ public class UserController {
         return service.update(id, request);
     }
     @Operation(summary="User operation", description="Localized errors: 400 ERR-1000, 404 ERR-1006, 409 ERR-1007, 500 ERR-1001")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) { service.delete(id); }
     @Operation(summary="User operation", description="Localized errors: 400 ERR-1000, 404 ERR-1006, 409 ERR-1007, 500 ERR-1001")
@@ -49,6 +50,7 @@ public class UserController {
     @Operation(summary="User operation", description="Localized errors: 400 ERR-1000, 404 ERR-1006, 409 ERR-1007, 500 ERR-1001")
     @GetMapping("/{id}/passport") public PassportResponse passport(@PathVariable Long id) { return service.passport(id); }
     @Operation(summary="User operation", description="Localized errors: 400 ERR-1000, 404 ERR-1006, 409 ERR-1007, 500 ERR-1001")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}/passport") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePassport(@PathVariable Long id) { service.deletePassport(id); }
 
