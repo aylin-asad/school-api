@@ -43,3 +43,7 @@ databaseChangeLog:
 - include:
     file: changes/012-session-login-at.yaml
     relativeToChangelogFile: true
+
+- include:
+    file: changes/013-account-lockout.yaml
+    relativeToChangelogFile: true

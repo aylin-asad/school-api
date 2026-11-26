@@ -12,5 +12,7 @@ public interface AccountRepository extends JpaRepository<Account,Long>{
  boolean existsByEmail(String email);
  boolean existsByRole(Role role);
  List<Account> findAllByRole(Role role);
+ @Lock(LockModeType.PESSIMISTIC_WRITE) @Query("select a from Account a where a.username=:login or a.email=:login") Optional<Account> lockByLogin(@Param("login") String login);
+ @Lock(LockModeType.PESSIMISTIC_WRITE) @Query("select a from Account a where a.username=:username") Optional<Account> lockByUsername(@Param("username") String username);
  @Lock(LockModeType.PESSIMISTIC_WRITE) @Query("select a from Account a where a.id=:id") Optional<Account> lockById(@Param("id") Long id);
 }

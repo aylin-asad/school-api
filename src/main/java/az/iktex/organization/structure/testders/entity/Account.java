@@ -15,5 +15,7 @@ public class Account {
  @Convert(converter=RoleConverter.class) @Column(name="role_id",nullable=false) private Role role;
  @Column(nullable=false) private boolean enabled=true;
  private Instant passwordChangedAt;
+ @Column(nullable=false) private int failedLoginAttempts;
+ private Instant lockedUntil;
  @CreationTimestamp @Column(nullable=false) private Instant createdAt;
 }

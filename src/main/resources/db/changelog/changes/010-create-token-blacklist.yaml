@@ -15,3 +15,7 @@ databaseChangeLog:
                blacklisted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
               );
               CREATE INDEX idx_blacklist_expires_at ON token_blacklist(expires_at);
+      rollback:
+        - sql:
+            sql: |
+              DROP TABLE token_blacklist;

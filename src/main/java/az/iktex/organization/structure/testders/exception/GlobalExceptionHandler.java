@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -31,13 +30,13 @@ public class GlobalExceptionHandler {
             Map<String,String> errors, Object... args) {
         HttpStatus status = code.getStatus();
         if (status.is5xxServerError())
-            log.error("Request failed: {} {} -> {} {} ({}) [{}] args={}", request.getMethod(),
+            log.error("Request failed: {} {} -> {} {} ({}) [{}] ", request.getMethod(),
                 request.getRequestURI(), status.value(), code.getCode(), code.getMessageKey(),
-                ex.getClass().getSimpleName(), Arrays.toString(args), ex);
+                ex.getClass().getSimpleName());
         else
-            log.warn("Request failed: {} {} -> {} {} ({}) [{}] args={} errors={}", request.getMethod(),
+            log.warn("Request failed: {} {} -> {} {} ({}) [{}] ", request.getMethod(),
                 request.getRequestURI(), status.value(), code.getCode(), code.getMessageKey(),
-                ex.getClass().getSimpleName(), Arrays.toString(args), errors);
+                ex.getClass().getSimpleName());
         String message = messageSource.getMessage(code.getMessageKey(), args, code.getMessageKey(), localeResolver.resolveLocale(request));
         return ResponseEntity.status(status).body(new ErrorResponse(status.value(), code.getCode(),
             message, errors, MDC.get("traceId"), LocalDateTime.now()));

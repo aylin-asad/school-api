@@ -12,8 +12,11 @@ import java.util.List;
 @RestController @RequestMapping("/api/auth") @RequiredArgsConstructor
 public class AuthController {
  private final AccountService accounts;private final AuthService auth;
+ @io.swagger.v3.oas.annotations.security.SecurityRequirements()
  @PostMapping("/register") @ResponseStatus(HttpStatus.CREATED) public AccountResponse register(@Valid @RequestBody RegisterRequest req){return accounts.register(req);}
+ @io.swagger.v3.oas.annotations.security.SecurityRequirements()
  @PostMapping("/login") public AuthResponse login(@Valid @RequestBody LoginRequest req){return auth.login(req);}
+ @io.swagger.v3.oas.annotations.security.SecurityRequirements()
  @PostMapping("/refresh") public AuthResponse refresh(@Valid @RequestBody RefreshRequest req){return auth.refresh(req);}
  @PostMapping("/logout") @ResponseStatus(HttpStatus.NO_CONTENT) public void logout(@AuthenticationPrincipal AuthPrincipal p){auth.logout(p);}
  @PostMapping("/logout-all") @ResponseStatus(HttpStatus.NO_CONTENT) public void logoutAll(@AuthenticationPrincipal AuthPrincipal p){auth.logoutAll(p);}

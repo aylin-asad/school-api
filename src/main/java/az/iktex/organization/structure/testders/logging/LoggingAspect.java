@@ -18,11 +18,8 @@ public class LoggingAspect {
     public Object logAround(ProceedingJoinPoint pjp) throws Throwable {
         boolean controller = pjp.getSignature().getDeclaringTypeName().contains(".controller.");
         String method = pjp.getSignature().getDeclaringType().getSimpleName() + "." + pjp.getSignature().getName();
-        String args = Arrays.toString(Arrays.stream(pjp.getArgs()).map(a -> {
-            if (a == null) return "null";
-            String n = a.getClass().getSimpleName().toLowerCase();
-            return n.contains("password") || n.contains("request") || n.contains("passport") ? "[REDACTED]" : String.valueOf(a);
-        }).toArray());
+        // Never stringify arbitrary service/controller arguments: raw tokens and passwords may be nested or plain strings.
+        String args = "[***]";
         long start = System.nanoTime();
         if (controller) log.info("--> {} args={}", method, args); else log.debug("--> {} args={}", method, args);
         try {
@@ -32,8 +29,8 @@ public class LoggingAspect {
             return result;
         } catch (Throwable ex) {
             long ms = (System.nanoTime() - start) / 1_000_000;
-            if (controller) log.info("<x- {} ({} ms) {}: {}", method, ms, ex.getClass().getSimpleName(), ex.getMessage());
-            else log.debug("<x- {} ({} ms) {}: {}", method, ms, ex.getClass().getSimpleName(), ex.getMessage());
+            if (controller) log.info("<x- {} ({} ms) {}", method, ms, ex.getClass().getSimpleName());
+            else log.debug("<x- {} ({} ms) {}", method, ms, ex.getClass().getSimpleName());
             throw ex;
         }
     }

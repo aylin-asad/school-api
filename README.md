@@ -395,3 +395,65 @@ screenshots/
 ```
 
 Confirm that application startup succeeds, the Liquibase changelog is up to date, Part B cache counters show hits and invalidation, Part C audit behavior matches the expectations above, and D1/D2/D3 each return `passed: true`. Then commit the code, migration, README and screenshots to the assignment branch.
+
+## Practical assignment 3: Spring Security and stateful JWT
+
+The new security layer adds independent login `Account` records, numeric roles, BCrypt(12), access and refresh JWTs, persisted token metadata, database revocation, refresh rotation and reuse detection, session administration, password changes, role-based authorization, localized security errors, and Swagger bearer authentication. Existing User/Passport entities and previous migrations remain unchanged.
+
+### Local run (development database)
+
+Requirements: JDK 25 (existing project toolchain), Gradle wrapper, Docker Compose, Python 3, OpenSSL. From the project root:
+
+```bash
+bash scripts/run-security.sh
+```
+
+The first run prompts for the initial administrator password and generates a Base64 32-byte JWT secret. The values are stored only in a private, Git-ignored `.env` file. If `admin` already exists, use its current password; the seeder never resets an existing administrator password. Keep the same secret between app restarts. To set the variables manually, export `JWT_SECRET` and `ADMIN_PASSWORD` in your shell before starting the application (do not commit the values).
+
+```bash
+export JWT_SECRET="$(openssl rand -base64 32)"
+read -s ADMIN_PASSWORD; export ADMIN_PASSWORD
+./gradlew bootRun
+```
+
+API root: `http://localhost:8080/test-demo/api`. Swagger: `http://localhost:8080/test-demo/swagger-ui.html`. The `/test-demo` context path is retained from the previous assignment.
+
+### Verification and screenshot evidence
+
+Leave the application running and open a second terminal in the project root:
+
+```bash
+bash scripts/verify-security.sh
+```
+
+The script exercises checklist items 1–11 and 14–16 (item 15 checks OpenAPI JSON; interactive Swagger is manual), as well as the account-lockout bonus. It uses randomly named disposable accounts and does not delete existing records. The SQL for the two mandatory screenshots is saved to `screenshots/security/logout-evidence.sql`; the corresponding database output is saved to `screenshots/security/logout-evidence.txt`. Run these SQL queries in IntelliJ's database console or use:
+
+```bash
+docker exec -i school-postgres psql -X -U postgres -d school_db < screenshots/security/logout-evidence.sql
+```
+
+Capture genuine screenshots of the two result tables showing revoked access and refresh rows and blacklist reason `LOGOUT`. Suggested names: `F01_Auth_Tokens_Logout.png` and `F02_Token_Blacklist_Logout.png`. Attach them to the `feature/token-blacklist` PR. Capture the Swagger Authorize UI separately if desired; mask bearer tokens in screenshots. Decode tokens locally rather than sending active credentials to external sites.
+
+For tests 12–13 only, stop the app and restart with temporary environment overrides:
+
+```bash
+APP_JWT_ACCESS_TOKEN_TTL=1m APP_SECURITY_TOKEN_CLEANUP_CRON='0 * * * * *' bash scripts/run-security.sh
+# In a separate terminal:
+bash scripts/verify-security.sh --expiry
+```
+
+This verifies expiration and scheduled deletion of expired rows. Restore defaults by restarting without those overrides. Standard TTLs are 15 minutes and 7 days; cleanup runs hourly.
+
+### Security design decisions
+
+- Authentication is HTTP-session stateless. JWT credentials are sent explicitly in the Authorization header, not browser-managed cookies, so CSRF is disabled. Roles and enabled status are retrieved from the database.
+- A token's raw value is never persisted; only its UUID (`jti`), session ID (`sid`), type and timestamps are stored. Blacklist inserts use PostgreSQL `ON CONFLICT DO NOTHING` to handle repeated revocation without aborting the transaction. Account-level pessimistic locks serialize refresh, password change and account revocation operations. Reuse detection commits revocations via `noRollbackFor=UnauthorizedException.class`, even when the request returns 401.
+- Session revocation is available to authenticated owners, not just administrators; the existing domain DELETE methods retain an additional ADMIN method guard.
+- The Caffeine bonus caches only positive blacklist results for one minute and updates the cache after a successful commit. Negative results are never cached: a cached negative on one application instance could allow a token revoked by another instance to remain usable. Cache misses always consult the database.
+- The account lockout bonus persists failed attempts and `locked_until`, returns ERR-2709 on the fifth failed attempt, and resets the count on successful login after the lockout window. This is an account-based educational lockout; production systems would also require rate limits and stronger abuse controls.
+- `login_at` preserves the original session start across rotation. Existing demo/cache endpoints are ADMIN-only to prevent authenticated ordinary users from manipulating demo or cache state.
+- Logging masks arbitrary controller/service arguments and does not print exception messages from security operations. Existing trace IDs and three-language message bundles are preserved.
+
+### Branch submission
+
+Required stacked branches: `feature/security-base` → `feature/security-errors` → `feature/jwt-filter` → `feature/token-blacklist` → `feature/auth-endpoints` → `feature/authorization` → `feature/security-swagger`. The final branch contains all features and both bonuses. The blacklist screenshot is generated using the final application (logout endpoint becomes available in the following branch) and attached to its dedicated PR. Each PR should target its preceding branch until that branch has been merged. The provided source has not been compiled or run in the preparation environment: Gradle wrapper distribution download was blocked by unavailable network access. Verify locally before submission.

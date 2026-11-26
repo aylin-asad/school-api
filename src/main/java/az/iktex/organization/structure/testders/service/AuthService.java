@@ -21,12 +21,22 @@ public class AuthService {
  private final TokenBlacklistService revocations;private final TokenService issuer;private final JwtService jwt;private final AuthenticationManager authenticationManager;private final PasswordEncoder encoder;
  private Account lock(Long id){return accounts.lockById(id).orElseThrow(()->new NotFoundException(ErrorCode.ACCOUNT_NOT_FOUND));}
  private Account enabled(Account a){if(!a.isEnabled())throw new ForbiddenException(ErrorCode.AUTH_ACCOUNT_DISABLED);return a;}
- @Transactional public AuthResponse login(LoginRequest req){
-  var candidate=accounts.findByUsernameOrEmail(req.login(),req.login());
+ @Transactional(noRollbackFor={BadCredentialsException.class,LockedException.class}) public AuthResponse login(LoginRequest req){
   // Serialize account modifications and issuance, including simultaneous refresh/logout.
-  Account a=candidate.map(x->lock(x.getId())).orElse(null);
-  var authentication=authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(req.login(),req.password()));
-  if(a==null)a=lock(accounts.findByUsername(authentication.getName()).orElseThrow(()->new BadCredentialsException("Invalid credentials")).getId());
+  Account a=accounts.lockByLogin(req.login()).orElse(null);
+  if(a!=null && a.getLockedUntil()!=null && !a.getLockedUntil().isAfter(Instant.now())){a.setLockedUntil(null);a.setFailedLoginAttempts(0);accounts.saveAndFlush(a);}
+  org.springframework.security.core.Authentication authentication;
+  try{authentication=authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(req.login(),req.password()));}
+  catch(BadCredentialsException e){
+   if(a!=null && a.isEnabled()){
+    a.setFailedLoginAttempts(a.getFailedLoginAttempts()+1);
+    if(a.getFailedLoginAttempts()>=5){a.setLockedUntil(Instant.now().plusSeconds(900));accounts.save(a);throw new LockedException("Account temporarily locked");}
+    accounts.save(a);
+   }
+   throw e;
+  }
+  if(a==null)a=accounts.lockByUsername(authentication.getName()).orElseThrow(()->new BadCredentialsException("Invalid credentials"));
+  a.setFailedLoginAttempts(0);a.setLockedUntil(null);accounts.save(a);
   return issuer.issuePair(enabled(a),UUID.randomUUID().toString());
  }
  // Reuse detection deliberately commits revocations even though a 401 is returned.
@@ -34,7 +44,8 @@ public class AuthService {
   Claims c;
   try{c=jwt.parse(req.refreshToken());}catch(ExpiredJwtException ex){throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_EXPIRED);}catch(JwtException|IllegalArgumentException ex){throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_INVALID);}
   if(!"REFRESH".equals(c.get("type",String.class)))throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_TYPE_MISMATCH);
-  Account a=lock(accounts.findByUsername(c.getSubject()).orElseThrow(()->new ForbiddenException(ErrorCode.AUTH_ACCOUNT_DISABLED)).getId());
+  Account a=accounts.lockByUsername(c.getSubject()).orElseThrow(()->new ForbiddenException(ErrorCode.AUTH_ACCOUNT_DISABLED));
+  if(!c.getExpiration().toInstant().isAfter(Instant.now()))throw new UnauthorizedException(ErrorCode.AUTH_TOKEN_EXPIRED);
   var blocked=blacklist.findByJti(c.getId());
   if(blocked.isPresent()){
    if(blocked.get().getReason()==RevokeReason.REFRESH_ROTATION){revocations.revokeAll(a.getId(),RevokeReason.REFRESH_REUSE_DETECTED);throw new UnauthorizedException(ErrorCode.AUTH_REFRESH_REUSED);}

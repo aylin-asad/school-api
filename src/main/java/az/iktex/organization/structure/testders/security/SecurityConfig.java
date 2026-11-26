@@ -28,7 +28,7 @@ public class SecurityConfig {
     .requestMatchers(org.springframework.http.HttpMethod.DELETE,"/api/students/**","/api/courses/**","/api/authors/**","/api/books/**").hasRole("ADMIN")
     .requestMatchers("/api/students/**","/api/courses/**","/api/authors/**","/api/books/**").hasAnyRole("ADMIN","MANAGER")
     .requestMatchers("/api/departments/**","/api/employees/**").hasRole("ADMIN")
-    .requestMatchers("/api/cache/**","/api/demo/**","/api/propagation/**","/api/isolation/**").hasRole("ADMIN")
+    .requestMatchers("/api/cache/**","/api/tx-demo/**","/api/demo/**","/api/propagation/**","/api/isolation/**").hasRole("ADMIN")
     .anyRequest().authenticated()).addFilterBefore(jwtFilter,org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class).build();
  }
  @Bean public PasswordEncoder passwordEncoder(){return new BCryptPasswordEncoder(12);}
