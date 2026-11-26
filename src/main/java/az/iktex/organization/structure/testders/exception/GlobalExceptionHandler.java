@@ -25,6 +25,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
     private final MessageSource messageSource;
+    private final org.springframework.web.servlet.LocaleResolver localeResolver;
 
     private ResponseEntity<ErrorResponse> build(HttpServletRequest request, Exception ex, ErrorCode code,
             Map<String,String> errors, Object... args) {
@@ -37,7 +38,7 @@ public class GlobalExceptionHandler {
             log.warn("Request failed: {} {} -> {} {} ({}) [{}] args={} errors={}", request.getMethod(),
                 request.getRequestURI(), status.value(), code.getCode(), code.getMessageKey(),
                 ex.getClass().getSimpleName(), Arrays.toString(args), errors);
-        String message = messageSource.getMessage(code.getMessageKey(), args, code.getMessageKey(), LocaleContextHolder.getLocale());
+        String message = messageSource.getMessage(code.getMessageKey(), args, code.getMessageKey(), localeResolver.resolveLocale(request));
         return ResponseEntity.status(status).body(new ErrorResponse(status.value(), code.getCode(),
             message, errors, MDC.get("traceId"), LocalDateTime.now()));
     }
@@ -88,6 +89,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> legacyConflict(HttpServletRequest req, IllegalStateException ex) {
         return build(req, ex, ErrorCode.DATA_INTEGRITY_VIOLATION, Map.of());
     }
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> badCredentials(HttpServletRequest req, Exception ex){return build(req,ex,ErrorCode.AUTH_BAD_CREDENTIALS,Map.of());}
+    @ExceptionHandler(org.springframework.security.authentication.DisabledException.class)
+    public ResponseEntity<ErrorResponse> disabled(HttpServletRequest req, Exception ex){return build(req,ex,ErrorCode.AUTH_ACCOUNT_DISABLED,Map.of());}
+    @ExceptionHandler(org.springframework.security.authentication.LockedException.class)
+    public ResponseEntity<ErrorResponse> locked(HttpServletRequest req, Exception ex){return build(req,ex,ErrorCode.AUTH_ACCOUNT_LOCKED,Map.of());}
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> denied(HttpServletRequest req, Exception ex){return build(req,ex,ErrorCode.AUTH_ACCESS_DENIED,Map.of());}
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> other(HttpServletRequest req, Exception ex) {
         return build(req, ex, ErrorCode.INTERNAL_ERROR, Map.of());
