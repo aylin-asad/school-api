@@ -15,3 +15,7 @@ databaseChangeLog:
                password_changed_at TIMESTAMP WITH TIME ZONE,
                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
               );
+      rollback:
+        - sql:
+            sql: |
+              DROP TABLE accounts;

@@ -19,3 +19,7 @@ databaseChangeLog:
               );
               CREATE INDEX idx_auth_token_session ON auth_tokens(session_id);
               CREATE INDEX idx_auth_token_account_revoked ON auth_tokens(account_id, revoked);
+      rollback:
+        - sql:
+            sql: |
+              DROP TABLE auth_tokens;

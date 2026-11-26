@@ -46,8 +46,8 @@ logging:
   level:
     az.iktex.organization.structure.testders.logging.LoggingAspect: DEBUG
     org.hibernate.cache: debug
-    org.springframework.orm.jpa.JpaTransactionManager: debug
-    org.springframework.transaction: trace
+    org.springframework.orm.jpa.JpaTransactionManager: info
+    org.springframework.transaction: info
 
   pattern:
     level: "%5p [%X{traceId:-}] [%X{username:-anonymous}]"

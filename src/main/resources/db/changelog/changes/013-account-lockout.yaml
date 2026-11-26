@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-account-lockout
+      author: school-api
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE accounts ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0;
+              ALTER TABLE accounts ADD COLUMN locked_until TIMESTAMP WITH TIME ZONE;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE accounts DROP COLUMN locked_until;
+              ALTER TABLE accounts DROP COLUMN failed_login_attempts;

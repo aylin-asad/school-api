@@ -8,3 +8,7 @@ databaseChangeLog:
               ALTER TABLE auth_tokens ADD COLUMN login_at TIMESTAMP WITH TIME ZONE;
               UPDATE auth_tokens SET login_at=issued_at;
               ALTER TABLE auth_tokens ALTER COLUMN login_at SET NOT NULL;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE auth_tokens DROP COLUMN login_at;
