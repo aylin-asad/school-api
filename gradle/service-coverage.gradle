@@ -1,0 +1,41 @@
+apply plugin: 'jacoco'
+
+jacoco {
+    // Java 25 class-file support.
+    toolVersion = '0.8.14'
+}
+
+def serviceClasses = sourceSets.main.output.classesDirs.asFileTree.matching {
+    include 'az/iktex/organization/structure/testders/service/**'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    classDirectories.setFrom(serviceClasses)
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = true
+    }
+}
+
+tasks.named('jacocoTestCoverageVerification') {
+    dependsOn tasks.named('jacocoTestReport')
+    classDirectories.setFrom(serviceClasses)
+    violationRules {
+        // No service or nested class is excluded. Enforce exact counts, not rounded percentages.
+        rule {
+            element = 'BUNDLE'
+            limit { counter = 'LINE'; value = 'MISSEDCOUNT'; maximum = 0 }
+            limit { counter = 'BRANCH'; value = 'MISSEDCOUNT'; maximum = 0 }
+            limit { counter = 'METHOD'; value = 'MISSEDCOUNT'; maximum = 0 }
+        }
+    }
+}
+
+tasks.named('check') { dependsOn tasks.named('jacocoTestCoverageVerification') }
