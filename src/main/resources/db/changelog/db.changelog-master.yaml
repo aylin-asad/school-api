@@ -31,3 +31,7 @@ databaseChangeLog:
 - include:
     file: changes/009-create-accounts.yaml
     relativeToChangelogFile: true
+
+- include:
+    file: changes/010-create-token-blacklist.yaml
+    relativeToChangelogFile: true

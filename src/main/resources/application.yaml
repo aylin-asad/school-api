@@ -50,7 +50,7 @@ logging:
     org.springframework.transaction: trace
 
   pattern:
-    level: "%5p [%X{traceId:-}]"
+    level: "%5p [%X{traceId:-}] [%X{username:-anonymous}]"
   file:
     name: logs/app.log
 
