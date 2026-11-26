@@ -27,3 +27,7 @@ databaseChangeLog:
 - include:
     file: changes/008-isolation-demo.yaml
     relativeToChangelogFile: true
+
+- include:
+    file: changes/009-create-accounts.yaml
+    relativeToChangelogFile: true

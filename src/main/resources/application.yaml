@@ -61,3 +61,16 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     try-it-out-enabled: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: school-api
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+  security:
+    token-cleanup-cron: "0 0 * * * *"
+    admin:
+      username: admin
+      email: admin@school.az
+      password: ${ADMIN_PASSWORD}

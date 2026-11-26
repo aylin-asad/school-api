@@ -31,6 +31,9 @@ public enum ValidationMessage {
         public static final String SERIAL_NUMBER_PATTERN = "{validation.serialNumberPattern}";
         public static final String NOT_NULL = "{validation.required}";
         public static final String POSITIVE_OR_ZERO = "{validation.notNegative}";
+        public static final String USERNAME_PATTERN = "{validation.usernamePattern}";
+        public static final String PASSWORD_STRONG = "{validation.passwordStrong}";
+        public static final String SIZE_MIN = "{validation.size.min}";
         private Keys() {}
     }
 }
