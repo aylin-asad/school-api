@@ -12,6 +12,7 @@ public class AuthToken {
  @Enumerated(EnumType.STRING) @Column(nullable=false,length=10) private TokenType tokenType;
  @ManyToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="account_id",nullable=false,foreignKey=@ForeignKey(name="fk_auth_token_account")) private Account account;
  @Column(nullable=false) private Instant issuedAt;
+ @Column(nullable=false) private Instant loginAt;
  @Column(nullable=false) private Instant expiresAt;
  @Column(nullable=false) private boolean revoked;
  private Instant revokedAt;

@@ -39,3 +39,7 @@ databaseChangeLog:
 - include:
     file: changes/011-create-auth-tokens.yaml
     relativeToChangelogFile: true
+
+- include:
+    file: changes/012-session-login-at.yaml
+    relativeToChangelogFile: true

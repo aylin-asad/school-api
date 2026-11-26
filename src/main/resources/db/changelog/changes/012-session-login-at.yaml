@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-session-login-at
+      author: school-api
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE auth_tokens ADD COLUMN login_at TIMESTAMP WITH TIME ZONE;
+              UPDATE auth_tokens SET login_at=issued_at;
+              ALTER TABLE auth_tokens ALTER COLUMN login_at SET NOT NULL;
