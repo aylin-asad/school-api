@@ -65,3 +65,6 @@ liquibase {
 }
 
 tasks.named('test') { useJUnitPlatform() }
+
+// Assignment 25: strict service-layer unit-test coverage
+apply from: "gradle/service-coverage.gradle"
